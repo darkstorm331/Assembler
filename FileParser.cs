@@ -12,7 +12,8 @@ public class FileParser
     public void Parse() 
     {
         Console.WriteLine($"Input File: {InputFile}, Output File: {OutputFile}");
-        
+
         //Main logic here
+        //TODO
     }
 }
