@@ -1,3 +1,6 @@
+
+using System.IO;
+
 public class FileParser
 {
     private string InputFile { get; set; }
@@ -13,22 +16,56 @@ public class FileParser
 
     public void Parse() 
     {
-        //Main logic here
-        //TODO
+        int lineCounter = 1;
+
+        try 
+        {
+            foreach (string line in File.ReadLines(InputFile))
+            {  
+                if(IsAInstruction(line)) 
+                {
+                    ParseAInstruction(line, lineCounter);
+                    continue;
+                } 
+
+                if(IsCInstruction(line)) 
+                {
+                    ParseCInstruction(line, lineCounter);
+                    continue;
+                }
+               
+                lineCounter++;  
+            }            
+        } catch 
+        {
+            throw;
+        }
     }
 
     private bool IsAInstruction(string codeLine) 
     {
-        return codeLine.StartsWith('@');
+        return codeLine.Trim().StartsWith('@');
     }
 
     private bool IsCInstruction(string codeLine) 
     {
+        if(!codeLine.Trim().StartsWith("//")) 
+        {
+            return false;
+        }
+
         if(!codeLine.Contains('=')) {
             return false;
         }
 
-        string commentsRemoved = codeLine.Split("//")[0].Trim();
+        string commentsRemoved = "";
+        try 
+        {
+            commentsRemoved = codeLine.Split("//")[0].Trim();
+        } catch //No comments
+        {
+            commentsRemoved = codeLine;
+        }
 
         if(commentsRemoved.Contains(';')) 
         {
@@ -57,5 +94,17 @@ public class FileParser
         }
 
         return true;
+    }
+
+    private void ParseAInstruction(string instruction, int lineNum) 
+    {
+        //TODO
+        Console.WriteLine(instruction);
+    }
+
+    private void ParseCInstruction(string instruction, int lineNum) 
+    {
+        //TODO
+        Console.WriteLine(instruction);
     }
 }
