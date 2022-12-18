@@ -154,7 +154,7 @@ public class FileParser
         {
             output += dst.Value;
         } else {
-           throw new Exception($"Destimation '{d}' was invalid"); 
+           output += "000"; //Do not store result 
         }
 
         if(jmp != null) 
