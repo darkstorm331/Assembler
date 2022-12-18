@@ -102,6 +102,7 @@ public class FileParser
 
             0AAAAAAA AAAAAAAA
         */
+        Console.WriteLine($"A Instruction: {instruction}");
         string output = "0";
 
         //Get rid of any trailing comments
@@ -135,6 +136,7 @@ public class FileParser
 
             1111acccc ccdddjjj
         */
+        Console.WriteLine($"C Instruction: {instruction}");
         string output = "111";
 
         //Get rid of any trailing comments
@@ -184,8 +186,8 @@ public class FileParser
     {
         Console.WriteLine($"Label: {instruction}, Line Num: {lineNum}");
 
-        string value = instruction.Replace("@", "");
-        
+        string value = instruction.Replace("(", "").Replace(")", "");
+    
         if(!Labels.ContainsKey(value)) 
         {
             Labels.Add(value, lineNum);
@@ -194,6 +196,7 @@ public class FileParser
             if(Labels[value] == -1) 
             {
                 Labels[value] = lineNum;
+                Console.WriteLine($"Label {Labels[value]} was seen before definition. Now set to {lineNum}");
             }
         }
     }
@@ -229,15 +232,15 @@ public class FileParser
             return symb.Address;
         } else 
         {
-            if(input.All(c => char.IsUpper(c))) //Label variable
+            if(input.Replace("_", "").All(c => char.IsUpper(c))) //Label variable
             {
                 if(Labels.ContainsKey(input)) 
                 {
-                    Console.WriteLine($"Decoded Symbol as label: {Labels[input]}");
+                    Console.WriteLine($"Decoded Symbol as defined label: {Labels[input]}");
                     return Labels[input];
                 } else 
                 {
-                    Console.WriteLine($"Decoded Symbol as label: {input}");
+                    Console.WriteLine($"Decoded Symbol as label not yet defined: {input}");
                     Labels.Add(input, -1);
                 }
             } else //custom variable
