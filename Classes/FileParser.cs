@@ -6,7 +6,9 @@ public class FileParser
     private string InputFile { get; set; }
     private string OutputFile { get; set; }
     private HackLanguageOptions Options { get; set; }
-    public List<string> ParsedInstructions { get; set; }
+    private List<string> ParsedInstructions { get; set; }
+    private Dictionary<string, int> Variables { get; set; }
+    private Dictionary<string, int> Labels { get; set; }
   
     public FileParser(string inFile, string outFile, HackLanguageOptions options) 
     {
@@ -14,11 +16,13 @@ public class FileParser
         OutputFile = outFile;
         Options = options;
         ParsedInstructions = new List<string>();
+        Variables = new Dictionary<string, int>();
+        Labels = new Dictionary<string, int>();
     } 
 
     public void Parse() 
     {
-        int lineCounter = 1;
+        int lineCounter = 0;       
 
         try 
         {
@@ -39,16 +43,22 @@ public class FileParser
                 if(IsAInstruction(line)) 
                 {
                     ParsedInstructions.Add(ParseAInstruction(line, lineCounter));
+                    lineCounter++;  
                     continue;
                 } 
 
                 if(IsCInstruction(line)) 
                 {
                     ParsedInstructions.Add(ParseCInstruction(line, lineCounter));
+                    lineCounter++;  
                     continue;
                 }
-               
-                lineCounter++;  
+
+                if(IsLabel(line)) 
+                {
+                    ParseLabel(line, lineCounter);
+                    continue;
+                }            
             } 
         } catch 
         {
@@ -71,6 +81,11 @@ public class FileParser
         return codeLine.Trim().StartsWith('@');
     }
 
+    private bool IsLabel(string codeLine) 
+    {
+        return codeLine.Trim().StartsWith('(') && codeLine.Trim().EndsWith(')');
+    }
+
     private bool IsCInstruction(string codeLine) 
     {
         if(!codeLine.Contains('=')) {
@@ -87,7 +102,6 @@ public class FileParser
 
             0AAAAAAA AAAAAAAA
         */
-        Console.WriteLine($"A Instruction: {instruction}");
         string output = "0";
 
         //Get rid of any trailing comments
@@ -99,12 +113,12 @@ public class FileParser
         if(int.TryParse(value, out address)) 
         {
             output += Convert.ToString(address, 2).PadLeft(15, '0');           
-        } else //variable or label
+        } else //variable
         {
-            //TODO
+            int parsedAddress = DecodeSymbol(value);
+            output += Convert.ToString(parsedAddress, 2).PadLeft(15, '0');           
         }
 
-        Console.WriteLine($"Parsed A Instruction: {output}"); 
         return output;       
     }
 
@@ -121,7 +135,6 @@ public class FileParser
 
             1111acccc ccdddjjj
         */
-        Console.WriteLine($"C Instruction: {instruction}");
         string output = "111";
 
         //Get rid of any trailing comments
@@ -164,8 +177,23 @@ public class FileParser
            output += "000"; //Do not jump
         }
 
-        Console.WriteLine($"Parsed C Instruction: {output}");        
         return output;
+    }
+
+    private void ParseLabel(string instruction, int lineNum) 
+    {
+        string value = instruction.Replace("@", "");
+        
+        if(!Labels.ContainsKey(value)) 
+        {
+            Labels.Add(value, lineNum);
+        } else 
+        {
+            if(Labels[value] == -1) 
+            {
+                Labels[value] = lineNum;
+            }
+        }
     }
 
     private string RemoveTrailingComments(string codeLine) 
@@ -185,5 +213,34 @@ public class FileParser
     private bool IsValidFile(string path) 
     {
         return path.IndexOfAny(Path.GetInvalidPathChars()) == -1;
+    }
+
+    private int DecodeSymbol(string input) 
+    {
+        Symbol symb = Options.SymbolMap.Where(a => a.Name == input).FirstOrDefault();
+
+        if(symb != null) 
+        {
+            return symb.Address;
+        } else 
+        {
+            if(input.All(c => char.IsUpper(c))) //Label variable
+            {
+                if(Labels.ContainsKey(input)) 
+                {
+                    return Labels[input];
+                } else 
+                {
+                    Labels.Add(input, -1);
+                }
+            } else //custom variable
+            {
+                int nextAddress = Options.UserVariableStartingAddress + Variables.Count;
+                Variables.Add(input, nextAddress);
+                return nextAddress;
+            }
+
+            return 0;
+        }
     }
 }
