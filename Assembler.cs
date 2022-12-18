@@ -1,9 +1,27 @@
-﻿
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+
+using IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureAppConfiguration((hostingContext, configuration) =>
+    {
+        configuration.Sources.Clear();
+
+        IHostEnvironment env = hostingContext.HostingEnvironment;
+
+        configuration
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
+
+        IConfigurationRoot configurationRoot = configuration.Build();
+    })
+    .Build();
 
 class Assembler
 {
     static void Main(string[] args)
     {
+
+
         if(!ArgsValid(args)) 
         {
             Console.ForegroundColor = ConsoleColor.Red;
