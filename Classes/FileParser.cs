@@ -63,7 +63,7 @@ public class FileParser
             throw new Exception("Invalid Output file path");
         }
 
-        
+        File.WriteAllLines(OutputFile, ParsedInstructions);
     }
 
     private bool IsAInstruction(string codeLine) 

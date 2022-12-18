@@ -35,8 +35,7 @@ class Assembler
             Console.WriteLine(err.GetBaseException().Message);
         } finally 
         {
-            Console.WriteLine("Press any key to close...");
-            Console.ReadKey();
+            Console.WriteLine("Terminating...");
         }
     }
 
@@ -48,9 +47,6 @@ class Assembler
         {
             return false;
         }
-
-        //Check that each argument is a valid file path 
-        //TODO
 
         string inputFileExtension = Path.GetExtension(args[0]);
         string outputFileExtension = Path.GetExtension(args[1]);
