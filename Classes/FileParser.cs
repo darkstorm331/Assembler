@@ -22,8 +22,8 @@ public class FileParser
 
     public void Parse() 
     {
-        int lineCounter = 0;       
-
+        int lineCounter = 0;
+            
         try 
         {
             if(!IsValidFile(InputFile)) 
@@ -31,6 +31,31 @@ public class FileParser
                 throw new Exception("Invalid Input file path");
             }
 
+            //Parse variables
+            foreach(string line in File.ReadLines(InputFile)) {
+                if(IsAInstruction(line)) 
+                {
+                    ParseAInstruction(line, lineCounter);
+                    lineCounter++;  
+                    continue;
+                } 
+
+                if(IsCInstruction(line)) 
+                {
+                    lineCounter++;  
+                    continue;
+                }
+
+
+                if(IsLabel(line)) 
+                {
+                    ParseLabel(line, lineCounter);
+                    continue;
+                }                 
+            }
+
+            //Parse File
+            lineCounter = 0;
             foreach (string line in File.ReadLines(InputFile))
             {  
                 //Ignore comments and blank space
@@ -88,7 +113,7 @@ public class FileParser
 
     private bool IsCInstruction(string codeLine) 
     {
-        if(!codeLine.Contains('=')) {
+        if(!codeLine.Contains('=') && !codeLine.Contains(';')) {
             return false;
         }
 
@@ -142,16 +167,27 @@ public class FileParser
         //Get rid of any trailing comments
         instruction = RemoveTrailingComments(instruction);
 
-        string d = instruction.Split('=')[0].Trim();
+        string d = "";
         string c = "";
         string j = "";
-        if(instruction.Contains(';')) //Has a jump operation
+
+        if(!instruction.Contains('=')) 
         {
+            c = instruction.Split(';')[0].Trim();
+            d = "";
             j = instruction.Split(';')[1].Trim();
-            c = instruction.Split('=')[1].Trim().Split(';')[0].Trim();
         } else 
         {
-            c = instruction.Split('=')[1].Trim();
+            d = instruction.Split('=')[0].Trim();
+
+            if(instruction.Contains(';')) //Has a jump operation
+            {
+                j = instruction.Split(';')[1].Trim();
+                c = instruction.Split('=')[1].Trim().Split(';')[0].Trim();
+            } else 
+            {
+                c = instruction.Split('=')[1].Trim();
+            }
         }
 
         Comp cmp = Options.CompMap.Where(a => a.Instruction == c).FirstOrDefault();
