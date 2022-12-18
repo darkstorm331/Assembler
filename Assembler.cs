@@ -22,14 +22,21 @@ class Assembler
                 return;
             }
 
+            Console.WriteLine($"{args[0]} will now be read"); 
             FileParser fp = new FileParser(args[0], args[1], options);
-            fp.Parse(); 
+            fp.Parse();
+            Console.WriteLine($"{args[0]} was successfully read. Will now be written to {args[1]}"); 
+            fp.WriteOutParsedInstructions();
+            Console.WriteLine($"{args[1]} was successfully written");
         }
         catch (Exception err)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(err.GetBaseException().Message);
-            return;            
+        } finally 
+        {
+            Console.WriteLine("Press any key to close...");
+            Console.ReadKey();
         }
     }
 
