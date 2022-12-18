@@ -268,34 +268,27 @@ public class FileParser
             return symb.Address;
         } else 
         {
-            if(input.Replace("_", "").All(c => char.IsUpper(c))) //Label variable
+            if(Labels.ContainsKey(input)) 
             {
-                if(Labels.ContainsKey(input)) 
-                {
-                    Console.WriteLine($"Decoded Symbol as defined label: {Labels[input]}");
-                    return Labels[input];
-                } else 
-                {
-                    Console.WriteLine($"Decoded Symbol as label not yet defined: {input}");
-                    Labels.Add(input, -1);
-                }
-            } else //custom variable
+                return Labels[input];
+            } else 
             {
-                if(Variables.ContainsKey(input)) 
-                {
-                    Console.WriteLine($"Decoded Symbol as Custom Variable: {Variables[input]}");
-                    return Variables[input];
-                } else 
-                {
-                    int nextAddress = Options.UserVariableStartingAddress + Variables.Count;
-                    Variables.Add(input, nextAddress);
-
-                    Console.WriteLine($"Decoded Symbol as Custom Variable: {nextAddress}");
-                    return nextAddress;
-                }
+                Console.WriteLine($"Decoded Symbol as label not yet defined: {input}");
+                Labels.Add(input, -1);
             }
 
-            return 0;
+            if(Variables.ContainsKey(input)) 
+            {
+                Console.WriteLine($"Decoded Symbol as Custom Variable: {Variables[input]}");
+                return Variables[input];
+            } else 
+            {
+                int nextAddress = Options.UserVariableStartingAddress + Variables.Count;
+                Variables.Add(input, nextAddress);
+
+                Console.WriteLine($"Decoded Symbol as Custom Variable: {nextAddress}");
+                return nextAddress;
+            }
         }
     }
 }
