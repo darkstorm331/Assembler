@@ -2,17 +2,17 @@ public class FileParser
 {
     private string InputFile { get; set; }
     private string OutputFile { get; set; }
-
-    public FileParser(string inFile, string outFile) 
+    private HackLanguageOptions Options { get; set; }
+    
+    public FileParser(string inFile, string outFile, HackLanguageOptions options) 
     {
         InputFile = inFile;
         OutputFile = outFile;
+        Options = options;
     } 
 
     public void Parse() 
     {
-        Console.WriteLine($"Input File: {InputFile}, Output File: {OutputFile}");
-
         //Main logic here
         //TODO
     }

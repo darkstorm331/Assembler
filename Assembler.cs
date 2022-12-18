@@ -1,36 +1,36 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 
-using IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration((hostingContext, configuration) =>
-    {
-        configuration.Sources.Clear();
-
-        IHostEnvironment env = hostingContext.HostingEnvironment;
-
-        configuration
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
-
-        IConfigurationRoot configurationRoot = configuration.Build();
-    })
-    .Build();
-
 class Assembler
 {
     static void Main(string[] args)
     {
+        try 
+        {
+            IConfiguration config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", true, true)                
+                .Build();            
 
+            HackLanguageOptions options = new();
+            config.GetSection(nameof(HackLanguageOptions))
+                .Bind(options);
 
-        if(!ArgsValid(args)) 
+            if(!ArgsValid(args)) 
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Arguments were either not provided, or were not valid");
+                return;
+            }
+
+            FileParser fp = new FileParser(args[0], args[1], options);
+            fp.Parse(); 
+        }
+        catch (Exception err)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Arguments were either not provided, or were not valid");
-            return;
+            Console.WriteLine(err.GetBaseException().Message);
+            return;            
         }
-
-        FileParser fp = new FileParser(args[0], args[1]);
-        fp.Parse();
     }
 
     static bool ArgsValid(string[] args) {
