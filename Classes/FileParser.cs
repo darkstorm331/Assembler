@@ -182,6 +182,8 @@ public class FileParser
 
     private void ParseLabel(string instruction, int lineNum) 
     {
+        Console.WriteLine($"Label: {instruction}, Line Num: {lineNum}");
+
         string value = instruction.Replace("@", "");
         
         if(!Labels.ContainsKey(value)) 
@@ -217,10 +219,13 @@ public class FileParser
 
     private int DecodeSymbol(string input) 
     {
+        Console.WriteLine($"Before Decode Symbol: {input}");
+
         Symbol symb = Options.SymbolMap.Where(a => a.Name == input).FirstOrDefault();
 
         if(symb != null) 
         {
+            Console.WriteLine($"Decoded Symbol as predefined: {symb.Address}");
             return symb.Address;
         } else 
         {
@@ -228,16 +233,27 @@ public class FileParser
             {
                 if(Labels.ContainsKey(input)) 
                 {
+                    Console.WriteLine($"Decoded Symbol as label: {Labels[input]}");
                     return Labels[input];
                 } else 
                 {
+                    Console.WriteLine($"Decoded Symbol as label: {input}");
                     Labels.Add(input, -1);
                 }
             } else //custom variable
             {
-                int nextAddress = Options.UserVariableStartingAddress + Variables.Count;
-                Variables.Add(input, nextAddress);
-                return nextAddress;
+                if(Variables.ContainsKey(input)) 
+                {
+                    Console.WriteLine($"Decoded Symbol as Custom Variable: {Variables[input]}");
+                    return Variables[input];
+                } else 
+                {
+                    int nextAddress = Options.UserVariableStartingAddress + Variables.Count;
+                    Variables.Add(input, nextAddress);
+
+                    Console.WriteLine($"Decoded Symbol as Custom Variable: {nextAddress}");
+                    return nextAddress;
+                }
             }
 
             return 0;
