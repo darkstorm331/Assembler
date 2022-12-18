@@ -398,3 +398,6 @@ FodyWeavers.xsd
 *.sln.iml
 obj/Debug/net7.0/Assembler.GeneratedMSBuildEditorConfig.editorconfig
 obj/Debug/net7.0/Assembler.assets.cache
+
+#VSCode
+.vscode/*

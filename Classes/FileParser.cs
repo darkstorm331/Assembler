@@ -6,7 +6,9 @@ public class FileParser
     private string InputFile { get; set; }
     private string OutputFile { get; set; }
     private HackLanguageOptions Options { get; set; }
-    public List<string> ParsedInstructions { get; set; }
+    private List<string> ParsedInstructions { get; set; }
+    private Dictionary<string, int> Variables { get; set; }
+    private Dictionary<string, int> Labels { get; set; }
   
     public FileParser(string inFile, string outFile, HackLanguageOptions options) 
     {
@@ -14,12 +16,14 @@ public class FileParser
         OutputFile = outFile;
         Options = options;
         ParsedInstructions = new List<string>();
+        Variables = new Dictionary<string, int>();
+        Labels = new Dictionary<string, int>();
     } 
 
     public void Parse() 
     {
-        int lineCounter = 1;
-
+        int lineCounter = 0;
+            
         try 
         {
             if(!IsValidFile(InputFile)) 
@@ -27,6 +31,31 @@ public class FileParser
                 throw new Exception("Invalid Input file path");
             }
 
+            //Parse variables
+            foreach(string line in File.ReadLines(InputFile)) {
+                if(IsAInstruction(line)) 
+                {
+                    ParseAInstruction(line, lineCounter);
+                    lineCounter++;  
+                    continue;
+                } 
+
+                if(IsCInstruction(line)) 
+                {
+                    lineCounter++;  
+                    continue;
+                }
+
+
+                if(IsLabel(line)) 
+                {
+                    ParseLabel(line, lineCounter);
+                    continue;
+                }                 
+            }
+
+            //Parse File
+            lineCounter = 0;
             foreach (string line in File.ReadLines(InputFile))
             {  
                 //Ignore comments and blank space
@@ -39,16 +68,22 @@ public class FileParser
                 if(IsAInstruction(line)) 
                 {
                     ParsedInstructions.Add(ParseAInstruction(line, lineCounter));
+                    lineCounter++;  
                     continue;
                 } 
 
                 if(IsCInstruction(line)) 
                 {
                     ParsedInstructions.Add(ParseCInstruction(line, lineCounter));
+                    lineCounter++;  
                     continue;
                 }
-               
-                lineCounter++;  
+
+                if(IsLabel(line)) 
+                {
+                    ParseLabel(line, lineCounter);
+                    continue;
+                }            
             } 
         } catch 
         {
@@ -71,9 +106,14 @@ public class FileParser
         return codeLine.Trim().StartsWith('@');
     }
 
+    private bool IsLabel(string codeLine) 
+    {
+        return codeLine.Trim().StartsWith('(') && codeLine.Trim().EndsWith(')');
+    }
+
     private bool IsCInstruction(string codeLine) 
     {
-        if(!codeLine.Contains('=')) {
+        if(!codeLine.Contains('=') && !codeLine.Contains(';')) {
             return false;
         }
 
@@ -99,12 +139,12 @@ public class FileParser
         if(int.TryParse(value, out address)) 
         {
             output += Convert.ToString(address, 2).PadLeft(15, '0');           
-        } else //variable or label
+        } else //variable
         {
-            //TODO
+            int parsedAddress = DecodeSymbol(value);
+            output += Convert.ToString(parsedAddress, 2).PadLeft(15, '0');           
         }
 
-        Console.WriteLine($"Parsed A Instruction: {output}"); 
         return output;       
     }
 
@@ -127,16 +167,27 @@ public class FileParser
         //Get rid of any trailing comments
         instruction = RemoveTrailingComments(instruction);
 
-        string d = instruction.Split('=')[0].Trim();
+        string d = "";
         string c = "";
         string j = "";
-        if(instruction.Contains(';')) //Has a jump operation
+
+        if(!instruction.Contains('=')) 
         {
+            c = instruction.Split(';')[0].Trim();
+            d = "";
             j = instruction.Split(';')[1].Trim();
-            c = instruction.Split('=')[1].Trim().Split(';')[0].Trim();
         } else 
         {
-            c = instruction.Split('=')[1].Trim();
+            d = instruction.Split('=')[0].Trim();
+
+            if(instruction.Contains(';')) //Has a jump operation
+            {
+                j = instruction.Split(';')[1].Trim();
+                c = instruction.Split('=')[1].Trim().Split(';')[0].Trim();
+            } else 
+            {
+                c = instruction.Split('=')[1].Trim();
+            }
         }
 
         Comp cmp = Options.CompMap.Where(a => a.Instruction == c).FirstOrDefault();
@@ -154,7 +205,7 @@ public class FileParser
         {
             output += dst.Value;
         } else {
-           throw new Exception($"Destimation '{d}' was invalid"); 
+           output += "000"; //Do not store result 
         }
 
         if(jmp != null) 
@@ -164,8 +215,26 @@ public class FileParser
            output += "000"; //Do not jump
         }
 
-        Console.WriteLine($"Parsed C Instruction: {output}");        
         return output;
+    }
+
+    private void ParseLabel(string instruction, int lineNum) 
+    {
+        Console.WriteLine($"Label: {instruction}, Line Num: {lineNum}");
+
+        string value = instruction.Replace("(", "").Replace(")", "");
+    
+        if(!Labels.ContainsKey(value)) 
+        {
+            Labels.Add(value, lineNum);
+        } else 
+        {
+            if(Labels[value] == -1) 
+            {
+                Labels[value] = lineNum;
+                Console.WriteLine($"Label {Labels[value]} was seen before definition. Now set to {lineNum}");
+            }
+        }
     }
 
     private string RemoveTrailingComments(string codeLine) 
@@ -185,5 +254,48 @@ public class FileParser
     private bool IsValidFile(string path) 
     {
         return path.IndexOfAny(Path.GetInvalidPathChars()) == -1;
+    }
+
+    private int DecodeSymbol(string input) 
+    {
+        Console.WriteLine($"Before Decode Symbol: {input}");
+
+        Symbol symb = Options.SymbolMap.Where(a => a.Name == input).FirstOrDefault();
+
+        if(symb != null) 
+        {
+            Console.WriteLine($"Decoded Symbol as predefined: {symb.Address}");
+            return symb.Address;
+        } else 
+        {
+            if(input.Replace("_", "").All(c => char.IsUpper(c))) //Label variable
+            {
+                if(Labels.ContainsKey(input)) 
+                {
+                    Console.WriteLine($"Decoded Symbol as defined label: {Labels[input]}");
+                    return Labels[input];
+                } else 
+                {
+                    Console.WriteLine($"Decoded Symbol as label not yet defined: {input}");
+                    Labels.Add(input, -1);
+                }
+            } else //custom variable
+            {
+                if(Variables.ContainsKey(input)) 
+                {
+                    Console.WriteLine($"Decoded Symbol as Custom Variable: {Variables[input]}");
+                    return Variables[input];
+                } else 
+                {
+                    int nextAddress = Options.UserVariableStartingAddress + Variables.Count;
+                    Variables.Add(input, nextAddress);
+
+                    Console.WriteLine($"Decoded Symbol as Custom Variable: {nextAddress}");
+                    return nextAddress;
+                }
+            }
+
+            return 0;
+        }
     }
 }
