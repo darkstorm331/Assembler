@@ -45,7 +45,6 @@ public class FileParser
                     continue;
                 }
 
-
                 if(IsLabel(line)) 
                 {
                     ParseLabel(line, lineCounter);
@@ -137,6 +136,11 @@ public class FileParser
 
     private bool IsCInstruction(string codeLine) 
     {
+        if(codeLine.Trim().StartsWith("//"))
+        {
+            return false;
+        }
+
         if(!codeLine.Contains('=') && !codeLine.Contains(';')) {
             return false;
         }
