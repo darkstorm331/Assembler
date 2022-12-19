@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net7.0/Assembler.dll",
-            "args": ["D:\\nand2tetris\\projects\\06\\Assembler\\Examples\\Rect.asm", "D:\\nand2tetris\\projects\\06\\Assembler\\Examples\\Output\\Rect.hack"],
+            "args": ["D:\\nand2tetris\\projects\\06\\Assembler\\Examples\\Pong.asm", "D:\\nand2tetris\\projects\\06\\Assembler\\Examples\\Output\\Pong.hack"],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

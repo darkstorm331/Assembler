@@ -31,7 +31,31 @@ public class FileParser
                 throw new Exception("Invalid Input file path");
             }
 
+            //Parse labels
+            foreach(string line in File.ReadLines(InputFile)) {
+                if(IsAInstruction(line)) 
+                {
+                    lineCounter++;  
+                    continue;
+                } 
+
+                if(IsCInstruction(line)) 
+                {
+                    lineCounter++;  
+                    continue;
+                }
+
+
+                if(IsLabel(line)) 
+                {
+                    ParseLabel(line, lineCounter);
+                    continue;
+                }                 
+            }
+
+
             //Parse variables
+            lineCounter = 0;
             foreach(string line in File.ReadLines(InputFile)) {
                 if(IsAInstruction(line)) 
                 {
@@ -49,7 +73,7 @@ public class FileParser
 
                 if(IsLabel(line)) 
                 {
-                    ParseLabel(line, lineCounter);
+                    //ParseLabel(line, lineCounter);
                     continue;
                 }                 
             }
@@ -271,12 +295,8 @@ public class FileParser
             if(Labels.ContainsKey(input)) 
             {
                 return Labels[input];
-            } else 
-            {
-                Console.WriteLine($"Decoded Symbol as label not yet defined: {input}");
-                Labels.Add(input, -1);
-            }
-
+            } 
+       
             if(Variables.ContainsKey(input)) 
             {
                 Console.WriteLine($"Decoded Symbol as Custom Variable: {Variables[input]}");
@@ -284,6 +304,7 @@ public class FileParser
             } else 
             {
                 int nextAddress = Options.UserVariableStartingAddress + Variables.Count;
+
                 Variables.Add(input, nextAddress);
 
                 Console.WriteLine($"Decoded Symbol as Custom Variable: {nextAddress}");
